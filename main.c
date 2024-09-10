@@ -1,24 +1,19 @@
-#include "uart_noblock.h"
+#include "uart.h"
+#include "console.h"
 
 int main(void)
 {
-    char c;
-
     // call module init api's here
     uart_init();
-
-    uart_puts("joshua carlson\n");
+    console_init();
 
     // super loop
     while (1) {
 
         // call module update api's here
         uart_update();
+        console_update();
 
-        // echo receive bytes
-        if (uart_getc(&c)) {
-            uart_putc(c);
-        }
     }
 }
 

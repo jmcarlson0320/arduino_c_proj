@@ -1,7 +1,7 @@
 #include <avr/io.h>
 #include <stdbool.h>
 
-#include "uart_noblock.h"
+#include "uart.h"
 
 static uint8_t rx_buf[RX_BUF_SIZE];
 static uint16_t rx_put_idx = 0;
@@ -69,7 +69,7 @@ static void poll_rx(void)
 
 static void poll_tx(void)
 {
-    char c;
+    uint8_t c;
 
     if (tx_buf_count == 0) {
         return;
@@ -120,7 +120,7 @@ bool uart_getc(char *c)
     return true;
 }
 
-bool uart_putc(char c)
+bool uart_putc(const char c)
 {
     if (tx_buf_count == TX_BUF_SIZE) {
         return false;
@@ -134,7 +134,7 @@ bool uart_putc(char c)
     return true;
 }
 
-uint8_t uart_puts(char *s)
+uint8_t uart_puts(const char *s)
 {
     uint8_t count = 0;
 
