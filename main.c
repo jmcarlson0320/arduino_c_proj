@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "console.h"
+#include "token.h"
 
 int main(void)
 {

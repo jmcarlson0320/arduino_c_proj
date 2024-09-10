@@ -3,6 +3,7 @@
 
 #include "console.h"
 #include "uart.h"
+#include "token.h"
 
 static char cmd_buf[CMD_BUF_SIZE];
 static uint8_t cmd_buf_idx = 0;
@@ -31,12 +32,16 @@ void console_update(void)
             cmd_buf[cmd_buf_idx] = '\0';
 
             // dummy command code
-            // simply echoes command
+            // tokenizes command and prints tokens
             // here you would dispatch to a command handler
             // ex: bool execute(char *cmd, uint8_t len);
             // execute(cmd_buf, cmd_buf_idx);
-            if (uart_puts(cmd_buf) > 1) {
-                uart_putc('\n');
+            if (cmd_buf_idx > 0) {
+                struct tokens t = tokenize(cmd_buf);
+                for (uint8_t i = 0; i < t.num_tokens; i++) {
+                    uart_puts(t.list[i]);
+                    uart_putc('\n');
+                }
             }
 
             // reset command buffer and prompt
