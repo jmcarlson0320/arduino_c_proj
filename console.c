@@ -6,7 +6,6 @@
 
 static char cmd_buf[CMD_BUF_SIZE];
 static uint8_t cmd_buf_idx = 0;
-
 static bool first_run_done = false;
 
 void console_init(void)
@@ -67,8 +66,8 @@ void console_update(void)
         // accumulate in cmd_buffer
         if (isprint(c)) {
             if (cmd_buf_idx < CMD_BUF_SIZE - 1) {
-                    cmd_buf[cmd_buf_idx++] = c;
                     uart_putc(c);
+                    cmd_buf[cmd_buf_idx++] = c;
             } else {
                     // ring bell if buffer is full
                     uart_putc('\a');

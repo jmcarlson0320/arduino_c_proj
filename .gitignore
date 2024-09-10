@@ -1,1 +1,8 @@
 *.swp
+*.lst
+*.o
+*.eep
+*.elf
+*.hex
+*.map
+.dep/

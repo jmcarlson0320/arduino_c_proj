@@ -63,7 +63,6 @@ static void poll_rx(void)
 
     rx_buf[rx_put_idx++] = c;
     rx_put_idx %= RX_BUF_SIZE;
-
     rx_buf_count++;
 }
 
@@ -81,10 +80,9 @@ static void poll_tx(void)
 
     c = tx_buf[tx_get_idx++];
     tx_get_idx %= TX_BUF_SIZE;
+    tx_buf_count--;
 
     uart_transmit_byte(c);
-
-    tx_buf_count--;
 }
 
 
