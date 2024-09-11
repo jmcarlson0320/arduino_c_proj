@@ -4,6 +4,7 @@
 #include "console.h"
 #include "uart.h"
 #include "token.h"
+#include "command.h"
 
 static char cmd_buf[CMD_BUF_SIZE];
 static uint8_t cmd_buf_idx = 0;
@@ -37,11 +38,14 @@ void console_update(void)
             // ex: bool execute(char *cmd, uint8_t len);
             // execute(cmd_buf, cmd_buf_idx);
             if (cmd_buf_idx > 0) {
+                cmd_execute(cmd_buf);
+                /*
                 struct tokens t = tokenize(cmd_buf);
                 for (uint8_t i = 0; i < t.num_tokens; i++) {
                     uart_puts(t.list[i]);
                     uart_putc('\n');
                 }
+                */
             }
 
             // reset command buffer and prompt

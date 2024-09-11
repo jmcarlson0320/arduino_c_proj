@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #include "token.h"
 
 static char *skip_space(char *str)
@@ -38,3 +40,14 @@ struct tokens tokenize(char *str)
     }
     return t;
 }
+
+bool scmp(const char *s1, const char *s2)
+{
+    while (*s1++ == *s2++) {
+        if (*s1 == '\0') {
+            return true;
+        }
+    }
+    return false;
+}
+
