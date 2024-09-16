@@ -10,6 +10,11 @@ static char *skip_space(char *str)
     return str;
 }
 
+// utility function that tokenizes a string in-place
+//
+// modifies str by replacing SPACE's with NULL's
+//
+// returns a struct tokens containing an array of tokens
 struct tokens tokenize(char *str)
 {
     struct tokens t;
@@ -41,6 +46,10 @@ struct tokens tokenize(char *str)
     return t;
 }
 
+// utility function for comparing strings
+//
+// used by the command module when searching for a command
+// by name
 bool scmp(const char *s1, const char *s2)
 {
     while (*s1++ == *s2++) {

@@ -3,7 +3,6 @@
 
 #include "console.h"
 #include "uart.h"
-#include "token.h"
 #include "command.h"
 
 static char cmd_buf[CMD_BUF_SIZE];
@@ -16,6 +15,14 @@ void console_init(void)
     first_run_done = false;
 }
 
+// Gets a character off the uart, adds it to the command buffer.
+//
+// Also handles special characters and implements basic line discipline.
+//
+// Displays the prompt defined in command.h.
+//
+// Upon newline or return, sends the contents of command buffer to the
+// command module.
 void console_update(void)
 {
     char c;
@@ -26,62 +33,44 @@ void console_update(void)
     }
 
     while (uart_getc(&c)) {
+        switch (c) {
+            case '\n':
+            case '\r':
+                uart_putc('\n');
+                cmd_buf[cmd_buf_idx] = '\0';
 
-        // handle end-of-line
-        if (c == '\n' || c == '\r') {
-            uart_putc('\n');
-            cmd_buf[cmd_buf_idx] = '\0';
-
-            // dummy command code
-            // tokenizes command and prints tokens
-            // here you would dispatch to a command handler
-            // ex: bool execute(char *cmd, uint8_t len);
-            // execute(cmd_buf, cmd_buf_idx);
-            if (cmd_buf_idx > 0) {
-                cmd_execute(cmd_buf);
-                /*
-                struct tokens t = tokenize(cmd_buf);
-                for (uint8_t i = 0; i < t.num_tokens; i++) {
-                    uart_puts(t.list[i]);
-                    uart_putc('\n');
+                // send buffer to command module
+                // for processing
+                if (cmd_buf_idx > 0) {
+                    cmd_execute(cmd_buf);
                 }
-                */
-            }
 
-            // reset command buffer and prompt
-            cmd_buf_idx = 0;
-            uart_puts(PROMPT);
-            continue;
-        }
-
-        // handle backspace
-        if (c == '\b' || c == 0x7f) {
-            if (cmd_buf_idx > 0) {
-                uart_puts("\b \b");
-                cmd_buf_idx--;
-            }
-            continue;
-        }
-
-        // handle clear-screen
-        if (c == '\f') {
-            uart_putc(c);
-            cmd_buf_idx = 0;
-            uart_puts(PROMPT);
-            continue;
-        }
-
-        // normal character
-        // accumulate in cmd_buffer
-        if (isprint(c)) {
-            if (cmd_buf_idx < CMD_BUF_SIZE - 1) {
-                    uart_putc(c);
-                    cmd_buf[cmd_buf_idx++] = c;
-            } else {
-                    // ring bell if buffer is full
-                    uart_putc('\a');
-            }
-            continue;
+                cmd_buf_idx = 0;
+                uart_puts(PROMPT);
+                break;
+            case '\b':
+            case 0x7f:
+                if (cmd_buf_idx > 0) {
+                    uart_puts("\b \b");
+                    cmd_buf_idx--;
+                }
+                break;
+            case '\f':
+                uart_putc(c);
+                cmd_buf_idx = 0;
+                uart_puts(PROMPT);
+                break;
+            default:
+                if (isprint(c)) {
+                    if (cmd_buf_idx < CMD_BUF_SIZE - 1) {
+                            uart_putc(c);
+                            cmd_buf[cmd_buf_idx++] = c;
+                    } else {
+                            // ring bell if buffer is full
+                            uart_putc('\a');
+                    }
+                }
+                break;
         }
     }
 }
