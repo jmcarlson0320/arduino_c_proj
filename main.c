@@ -1,23 +1,27 @@
+#include <avr/io.h>
+
 #include "uart.h"
 #include "console.h"
 #include "command.h"
+#include "token.h"
 
 // function matching command function prototype in command.h
 //
 // this is an action performed by a command
 // prints a message followed by a list of the arguments
 // passed in.
-bool dummy_command(uint8_t argc, char *argv[])
+bool led_command(uint8_t argc, char *argv[])
 {
-    uart_puts("running dummy command\n");
-    uart_puts("arguments: ");
-    for (uint8_t i = 0; i < argc; i++) {
-        uart_puts(argv[i]);
-        if (i < (argc - 1)) {
-            uart_puts(", ");
-        }
+    uart_puts("running led command\n");
+
+    if (scmp(argv[1], "on")) {
+        PORTB = 0xff;
+    } else if (scmp(argv[1], "off")) {
+        PORTB = 0x00;
+    } else {
+        return false;
     }
-    uart_putc('\n');
+
     return true;
 }
     
@@ -33,7 +37,10 @@ int main(void)
     // run the command from the console using:
     //
     // dmy arg1 arg2 arg3 ...
-    cmd_register("dmy", dummy_command);
+    cmd_register("led", led_command);
+
+    DDRB = 0xff;
+    PORTB = 0x00;
 
     // super loop
     while (1) {
