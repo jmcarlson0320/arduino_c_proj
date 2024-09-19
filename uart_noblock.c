@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "uart.h"
 
@@ -12,6 +13,17 @@ static uint8_t tx_buf[TX_BUF_SIZE];
 static uint16_t tx_put_idx = 0;
 static uint16_t tx_get_idx = 0;
 static uint8_t tx_buf_count = 0;
+
+static int stdio_putc(char c, FILE *stream)
+{
+    if (uart_putc(c)) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+static FILE uart_stream = FDEV_SETUP_STREAM(stdio_putc, NULL, _FDEV_SETUP_WRITE);
 
 static bool uart_is_rx_rdy(void)
 {
@@ -96,6 +108,8 @@ void uart_init(void)
     UBRR0H = (brr >> 8);
 
     UCSR0B = (1 << RXEN0) | (1 << TXEN0);
+
+    stdout = &uart_stream;
 }
 
 void uart_update(void)
