@@ -2,11 +2,15 @@
 #define DIO_H
 
 struct io_info {
-    // properties here
+    // the three registers associated with a port
     volatile uint8_t *dat_reg;
     volatile uint8_t *dir_reg;
     volatile uint8_t *pin_reg;
+
+    // the pin number to use for this IO channel
     volatile uint8_t pin;
+
+    // whether to use channel as input or output
     bool output;
 };
 

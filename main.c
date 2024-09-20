@@ -11,6 +11,7 @@
 enum io_channels {
     LED_GREEN,
     LED_RED,
+    D7_IN,
     NUM_IO_CHANNELS
 };
 
@@ -30,6 +31,14 @@ struct io_info io_cfg[NUM_IO_CHANNELS] = {
         .pin_reg = &PINB,
         .pin = PORTB3,
         .output = true
+    },
+
+    [D7_IN] = {
+        .dat_reg = &PORTD,
+        .dir_reg = &DDRD,
+        .pin_reg = &PIND,
+        .pin = PORTD7,
+        .output = false
     }
 };
 
@@ -65,6 +74,19 @@ bool led_command(uint8_t argc, char *argv[])
     return true;
 }
 
+bool read_io(uint8_t argc, char *argv[])
+{
+    bool val = dio_rd(D7_IN);
+
+    if (val) {
+        printf("value of dio input 7 is HIGH\n");
+    } else {
+        printf("value of dio input 7 is LOW\n");
+    }
+
+    return true;
+}
+
 int main(void)
 {
     uart_init();
@@ -72,6 +94,7 @@ int main(void)
     dio_init(io_cfg, NUM_IO_CHANNELS);
 
     cmd_register("led", led_command);
+    cmd_register("read", read_io);
 
     while (1) {
         uart_update();
