@@ -12,5 +12,6 @@ struct io_info {
 
 void dio_init(struct io_info *cfg, uint8_t num_io_info);
 void dio_wr(uint8_t io_idx, bool val);
+bool dio_rd(uint8_t io_idx);
 
 #endif // DIO_H
