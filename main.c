@@ -1,14 +1,17 @@
+#include <avr/io.h>
 #include <stdio.h>
 
 #include "uart.h"
 #include "console.h"
 #include "command.h"
+#include "token.h"
 
-bool dummy_command(uint8_t argc, char *argv[])
+bool led_command(uint8_t argc, char *argv[])
 {
-    printf("running the command: %s\n", argv[0]);
-    for (uint8_t i = 0; i < argc; i++) {
-        printf("%s\n", argv[i]);
+    if (scmp("on", argv[1])) {
+        PORTB |= (1 << PORTB4);
+    } else if (scmp("off", argv[1])) {
+        PORTB &= ~(1 << PORTB4);
     }
 
     return true;
@@ -19,7 +22,9 @@ int main(void)
     uart_init();
     console_init();
 
-    cmd_register("cmd_1", dummy_command);
+    cmd_register("led", led_command);
+
+    DDRB |= (1 << DDB4); // output
 
     while (1) {
         uart_update();
