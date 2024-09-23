@@ -9,7 +9,7 @@
 #include "timer.h"
 
 // user defines input and outputs
-enum io_channels {
+enum io_channel {
     LED_GREEN,
     LED_RED,
     D7_IN,
@@ -43,31 +43,55 @@ struct io_info io_cfg[NUM_IO_CHANNELS] = {
     }
 };
 
-static uint8_t red_state = 0;
-static uint8_t red_timer;
+struct led_info {
+    uint8_t state;
+    uint8_t timer_id;
+    enum io_channel channel;
+    uint16_t blink_period;
+};
+
+enum led_label {
+    RED,
+    GREEN,
+    NUM_LEDS
+};
+
+static struct led_info leds[NUM_LEDS];
+
 enum timer_action red_callback(void)
 {
-    red_state = ~red_state;
-    dio_wr(LED_RED, red_state);
+    leds[RED].state = ~leds[RED].state;
+    dio_wr(leds[RED].channel, leds[RED].state);
 
     return TIMER_ACTION_REPEAT;
 }
 
-static uint8_t green_state = 0;
-static uint8_t green_timer;
 enum timer_action green_callback(void)
 {
-    green_state = ~green_state;
-    dio_wr(LED_GREEN, green_state);
+    leds[GREEN].state = ~leds[GREEN].state;
+    dio_wr(leds[GREEN].channel, leds[GREEN].state);
 
     return TIMER_ACTION_REPEAT;
+}
+
+void leds_init(void)
+{
+    leds[RED].state = 0;
+    leds[RED].blink_period = 250;
+    leds[RED].channel = LED_RED;
+    leds[RED].timer_id = timer_get();
+    timer_set_callback(leds[RED].timer_id, red_callback);
+
+    leds[GREEN].state = 0;
+    leds[GREEN].blink_period = 100;
+    leds[GREEN].channel = LED_GREEN;
+    leds[GREEN].timer_id = timer_get();
+    timer_set_callback(leds[GREEN].timer_id, green_callback);
 }
 
 bool led_command(uint8_t argc, char *argv[])
 {
-    enum io_channels channel;
-    uint8_t timer;
-    uint16_t ms;
+    enum led_label idx;
 
     if (argc != 3) {
         printf("usage: led <color> <on/off>\n");
@@ -75,13 +99,9 @@ bool led_command(uint8_t argc, char *argv[])
     }
 
     if (scmp("red", argv[1])) {
-        channel = LED_RED;
-        timer = red_timer;
-        ms = 250;
+        idx = RED;
     } else if (scmp("green", argv[1])) {
-        channel = LED_GREEN;
-        timer = green_timer;
-        ms = 100;
+        idx = GREEN;
     } else {
         printf("invalid led name\n");
         printf("usage: led <color> <on/off>\n");
@@ -89,13 +109,13 @@ bool led_command(uint8_t argc, char *argv[])
     }
 
     if (scmp("on", argv[2])) {
-        dio_wr(channel, 1);
-        timer_stop(timer);
+        dio_wr(leds[idx].channel, 1);
+        timer_stop(leds[idx].timer_id);
     } else if (scmp("off", argv[2])) {
-        dio_wr(channel, 0);
-        timer_stop(timer);
+        dio_wr(leds[idx].channel, 0);
+        timer_stop(leds[idx].timer_id);
     } else if (scmp("blink", argv[2])) {
-        timer_start(timer, ms);
+        timer_start(leds[idx].timer_id, leds[idx].blink_period);
     } else {
         printf("invalid control description\n");
         printf("usage: led <color> <on/off>\n");
@@ -128,11 +148,7 @@ int main(void)
     cmd_register("led", led_command);
     cmd_register("read", read_io);
 
-    red_timer = timer_get();
-    timer_set_callback(red_timer, red_callback);
-
-    green_timer = timer_get();
-    timer_set_callback(green_timer, green_callback);
+    leds_init();
 
     while (1) {
         uart_update();
