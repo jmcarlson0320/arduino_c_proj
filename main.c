@@ -8,6 +8,11 @@
 #include "dio.h"
 #include "timer.h"
 
+// TODO
+// - refactor led code into a module
+// - add userdata to callback
+// - use a single callback, check which led by userdata
+
 // user defines input and outputs
 enum io_channel {
     LED_GREEN,
@@ -74,27 +79,12 @@ enum timer_action green_callback(void)
     return TIMER_ACTION_REPEAT;
 }
 
-void leds_init(void)
-{
-    leds[RED].state = 0;
-    leds[RED].blink_period = 250;
-    leds[RED].channel = LED_RED;
-    leds[RED].timer_id = timer_get();
-    timer_set_callback(leds[RED].timer_id, red_callback);
-
-    leds[GREEN].state = 0;
-    leds[GREEN].blink_period = 100;
-    leds[GREEN].channel = LED_GREEN;
-    leds[GREEN].timer_id = timer_get();
-    timer_set_callback(leds[GREEN].timer_id, green_callback);
-}
-
 bool led_command(uint8_t argc, char *argv[])
 {
     enum led_label idx;
 
     if (argc != 3) {
-        printf("usage: led <color> <on/off>\n");
+        printf("usage: led <color> <on/off/blink>\n");
         return false;
     }
 
@@ -104,7 +94,7 @@ bool led_command(uint8_t argc, char *argv[])
         idx = GREEN;
     } else {
         printf("invalid led name\n");
-        printf("usage: led <color> <on/off>\n");
+        printf("usage: led <color> <on/off/blink>\n");
         return false;
     }
 
@@ -118,24 +108,28 @@ bool led_command(uint8_t argc, char *argv[])
         timer_start(leds[idx].timer_id, leds[idx].blink_period);
     } else {
         printf("invalid control description\n");
-        printf("usage: led <color> <on/off>\n");
+        printf("usage: led <color> <on/off/blink>\n");
         return false;
     }
 
     return true;
 }
 
-bool read_io(uint8_t argc, char *argv[])
+void leds_init(void)
 {
-    bool val = dio_rd(D7_IN);
+    leds[RED].state = 0;
+    leds[RED].blink_period = 250;
+    leds[RED].channel = LED_RED;
+    leds[RED].timer_id = timer_get();
+    timer_set_callback(leds[RED].timer_id, red_callback);
 
-    if (val) {
-        printf("value of dio input 7 is HIGH\n");
-    } else {
-        printf("value of dio input 7 is LOW\n");
-    }
+    leds[GREEN].state = 0;
+    leds[GREEN].blink_period = 100;
+    leds[GREEN].channel = LED_GREEN;
+    leds[GREEN].timer_id = timer_get();
+    timer_set_callback(leds[GREEN].timer_id, green_callback);
 
-    return true;
+    cmd_register("led", led_command);
 }
 
 int main(void)
@@ -144,9 +138,6 @@ int main(void)
     console_init();
     timer_init();
     dio_init(io_cfg, NUM_IO_CHANNELS);
-
-    cmd_register("led", led_command);
-    cmd_register("read", read_io);
 
     leds_init();
 

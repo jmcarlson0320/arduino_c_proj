@@ -66,21 +66,23 @@ void timer_init(void)
 void timer_update(void)
 {
     for (uint8_t i = 0; i < MAX_TIMERS; i++) {
-        if (timers[i].state == TIMER_RUNNING) {
-            if ((ticks - timers[i].start) >= timers[i].duration) {
-                // if timer has an associated callback, call it
-                if (timers[i].callback) {
-                    enum timer_action action = (*(timers[i].callback))();
-                    if (action == TIMER_ACTION_REPEAT) {
-                        timers[i].start = ticks;
-                        timers[i].state = TIMER_RUNNING;
-                    } else if (action == TIMER_ACTION_NONE) {
-                        timers[i].state = TIMER_EXPIRED;
-                    }
-                } else {
-                    timers[i].state = TIMER_EXPIRED;
-                }
+        if (timers[i].state != TIMER_RUNNING) {
+            continue;
+        }
+        if ((ticks - timers[i].start) < timers[i].duration) {
+            continue;
+        }
+
+        if (timers[i].callback) {
+            enum timer_action action = (*(timers[i].callback))();
+            if (action == TIMER_ACTION_REPEAT) {
+                timers[i].start = ticks;
+                timers[i].state = TIMER_RUNNING;
+            } else if (action == TIMER_ACTION_NONE) {
+                timers[i].state = TIMER_EXPIRED;
             }
+        } else {
+            timers[i].state = TIMER_EXPIRED;
         }
     }
 }

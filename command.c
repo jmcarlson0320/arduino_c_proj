@@ -18,17 +18,18 @@ static uint8_t num_commands = 0;
 // see command.h for the cmd_info struct definition
 bool cmd_register(const char *name, cmd_func f)
 {
-    if (name && f && (num_commands < MAX_COMMANDS)) {
-        commands[num_commands].name = name;
-        commands[num_commands].function = f;
-        num_commands++;
-        return true;
+    if (!name || !f || (num_commands >= MAX_COMMANDS)) {
+        return false;
     }
 
-    return false;
+    commands[num_commands].name = name;
+    commands[num_commands].function = f;
+    num_commands++;
+
+    return true;
 }
 
-// called when ready to execute a command string
+// called to execute a command string
 //
 // command string is assumed to be in the form:
 // command_name arg1 arg1 ...
