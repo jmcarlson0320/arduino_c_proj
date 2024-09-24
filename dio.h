@@ -1,6 +1,9 @@
 #ifndef DIO_H
 #define DIO_H
 
+#include <stdint.h>
+#include <stdbool.h>
+
 struct io_info {
     // the three registers associated with a port
     volatile uint8_t *dat_reg;

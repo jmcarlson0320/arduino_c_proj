@@ -15,6 +15,7 @@ struct timer {
     uint32_t duration;
     enum timer_state state;
     timer_cb callback;
+    uint8_t userdata;
 };
 
 static struct timer timers[MAX_TIMERS];
@@ -74,7 +75,7 @@ void timer_update(void)
         }
 
         if (timers[i].callback) {
-            enum timer_action action = (*(timers[i].callback))();
+            enum timer_action action = (*(timers[i].callback))(timers[i].userdata);
             if (action == TIMER_ACTION_REPEAT) {
                 timers[i].start = ticks;
                 timers[i].state = TIMER_RUNNING;
@@ -152,4 +153,13 @@ void timer_set_callback(uint8_t id, timer_cb cb)
     }
     
     timers[id].callback = cb;
+}
+
+void timer_set_userdata(uint8_t id, uint8_t userdata)
+{
+    if (id < 0 || MAX_TIMERS <= id) {
+        return;
+    }
+
+    timers[id].userdata = userdata;
 }
