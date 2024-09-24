@@ -7,6 +7,7 @@
 
 static char cmd_buf[CMD_BUF_SIZE];
 static uint8_t cmd_buf_idx = 0;
+
 static bool first_run_done = false;
 
 void console_init(void)
@@ -15,14 +16,6 @@ void console_init(void)
     first_run_done = false;
 }
 
-// Gets a character off the uart, adds it to the command buffer.
-//
-// Also handles special characters and implements basic line discipline.
-//
-// Displays the prompt defined in command.h.
-//
-// Upon newline or return, sends the contents of command buffer to the
-// command module.
 void console_update(void)
 {
     char c;
@@ -48,6 +41,7 @@ void console_update(void)
                 cmd_buf_idx = 0;
                 uart_puts(PROMPT);
                 break;
+            // backspace
             case '\b':
             case 0x7f:
                 if (cmd_buf_idx > 0) {
@@ -55,6 +49,7 @@ void console_update(void)
                     cmd_buf_idx--;
                 }
                 break;
+            // clear screen
             case '\f':
                 uart_putc(c);
                 cmd_buf_idx = 0;
