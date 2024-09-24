@@ -51,7 +51,7 @@ FORMAT = ihex
 TARGET = main
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c uart_noblock.c console.c token.c command.c dio.c timer.c
+SRC = $(TARGET).c uart_noblock.c console.c token.c command.c dio.c timer.c led.c
 
 # List Assembler source files here.
 #     Make them always end in a capital .S.  Files ending in a lowercase .s
