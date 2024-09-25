@@ -5,6 +5,7 @@
 #include "console.h"
 #include "command.h"
 #include "token.h"
+#include "mem.h"
 #include "dio.h"
 #include "timer.h"
 #include "led.h"
@@ -52,6 +53,7 @@ int main(void)
     uart_init();
     console_init();
     timer_init();
+    mem_init();
     dio_init(io_cfg, NUM_LEDS);
     leds_init(leds_cfg, NUM_LEDS);
 
