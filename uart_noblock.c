@@ -1,18 +1,13 @@
 #include <avr/io.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "uart.h"
+#include "buffer.h"
 
-static uint8_t rx_buf[RX_BUF_SIZE];
-static uint16_t rx_put_idx = 0;
-static uint16_t rx_get_idx = 0;
-static uint8_t rx_buf_count = 0;
-
-static uint8_t tx_buf[TX_BUF_SIZE];
-static uint16_t tx_put_idx = 0;
-static uint16_t tx_get_idx = 0;
-static uint8_t tx_buf_count = 0;
+static struct buffer rx_buf;
+static struct buffer tx_buf;
 
 static int stdio_putc(char c, FILE *stream)
 {
@@ -22,7 +17,6 @@ static int stdio_putc(char c, FILE *stream)
         return 1;
     }
 }
-
 static FILE uart_stream = FDEV_SETUP_STREAM(stdio_putc, NULL, _FDEV_SETUP_WRITE);
 
 static bool uart_is_rx_rdy(void)
@@ -69,38 +63,25 @@ static void poll_rx(void)
         return;
     }
 
-    if (rx_buf_count == RX_BUF_SIZE) {
-        return;
-    }
-
-    rx_buf[rx_put_idx++] = c;
-    rx_put_idx %= RX_BUF_SIZE;
-    rx_buf_count++;
+    buffer_put(&rx_buf, c);
 }
 
 static void poll_tx(void)
 {
     uint8_t c;
 
-    if (tx_buf_count == 0) {
-        return;
-    }
-
     if (!uart_is_tx_rdy()) {
         return;
     }
 
-    c = tx_buf[tx_get_idx++];
-    tx_get_idx %= TX_BUF_SIZE;
-    tx_buf_count--;
+    if (buffer_get(&tx_buf, &c) == BUFFER_ERROR) {
+        return;
+    }
 
     uart_transmit_byte(c);
 }
 
 
-/*
- * Public API
- */
 void uart_init(void)
 {
     uint16_t brr = (F_CPU/16/BAUD) - 1;
@@ -108,6 +89,9 @@ void uart_init(void)
     UBRR0H = (brr >> 8);
 
     UCSR0B = (1 << RXEN0) | (1 << TXEN0);
+
+    rx_buf = buffer_init(malloc(RX_BUF_SIZE), RX_BUF_SIZE);
+    tx_buf = buffer_init(malloc(TX_BUF_SIZE), TX_BUF_SIZE);
 
     stdout = &uart_stream;
 }
@@ -120,30 +104,12 @@ void uart_update(void)
 
 bool uart_getc(char *c)
 {
-    if (rx_buf_count == 0) {
-        return false;
-    }
-
-    *c = rx_buf[rx_get_idx++];
-    rx_get_idx %= RX_BUF_SIZE;
-
-    rx_buf_count--;
-
-    return true;
+    return (buffer_get(&rx_buf, (uint8_t *)c) == BUFFER_SUCCESS) ? true : false;
 }
 
 bool uart_putc(const char c)
 {
-    if (tx_buf_count == TX_BUF_SIZE) {
-        return false;
-    }
-
-    tx_buf[tx_put_idx++] = c;
-    tx_put_idx %= TX_BUF_SIZE;
-
-    tx_buf_count++;
-
-    return true;
+    return (buffer_put(&tx_buf, c) == BUFFER_SUCCESS) ? true : false;
 }
 
 uint8_t uart_puts(const char *s)
