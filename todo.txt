@@ -1,1 +1,11 @@
-ringbuffer module
+memory module
+logging module
+organize files
+    proj\
+        main.c
+        Makefile
+        connect.sh
+        todo.txt
+        include\
+        src\
+        bin\
